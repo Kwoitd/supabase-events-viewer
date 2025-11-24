@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <title>Supabase Events Realtime Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css" />
+
+    <!-- Supabase JS v2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Realtime Supabase Events</h1>
+      <p class="subtitle">
+        Web dùng để load toàn bộ event + tự cập nhật khi có thay đổi.
+      </p>
+
+      <div class="status-bar">
+        <div id="status-text">Đang kết nối Supabase…</div>
+        <div class="badge" id="realtime-badge">Realtime: OFF</div>
+      </div>
+
+      <div id="events" class="events"></div>
+      <div id="empty" class="empty" style="display: none">
+        Chưa có event nào.
+      </div>
+      <div id="error" class="error" style="display: none"></div>
+    </div>
+
+    <div id="pagination" class="pagination"></div>
+
+    <div id="events" class="events"></div>
+    <div id="empty" class="empty" style="display: none">Chưa có event nào.</div>
+    <div id="error" class="error" style="display: none"></div>
+
+    <!-- JS của bạn -->
+    <script src="app.js"></script>
+  </body>
+</html>
