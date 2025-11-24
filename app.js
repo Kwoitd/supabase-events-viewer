@@ -159,67 +159,80 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function renderEvents(events) {
-    eventsContainer.innerHTML = "";
+ function renderEvents(events) {
+  eventsContainer.innerHTML = '';
 
-    if (!events || events.length === 0) {
-      emptyEl.style.display = "block";
-      return;
+  if (!events || events.length === 0) {
+    emptyEl.style.display = 'block';
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+
+  events.forEach((evt) => {
+    const card = document.createElement('div');
+    card.className = 'event-card';
+
+    // ====== Event ID + Time ======
+    const header = document.createElement('div');
+    header.className = 'event-header';
+
+    const idEl = document.createElement('div');
+    idEl.className = 'event-id';
+    idEl.textContent = `Event ID: ${evt.event_id}`;
+
+    const timeEl = document.createElement('div');
+    timeEl.className = 'event-time';
+    timeEl.textContent = formatTime(evt.created_at);
+
+    header.appendChild(idEl);
+    header.appendChild(timeEl);
+
+    // ====== Description ======
+    const descriptionText =
+      evt.event_description || '(Không có mô tả)';
+
+    const descEl = document.createElement('div');
+    descEl.className = 'event-desc';
+    descEl.innerHTML = `
+      <span class="field-label">Description:</span> ${descriptionText}
+    `;
+
+    // ====== Notes ======
+    const notesText = evt.notes || '(Không có ghi chú)';
+
+    const notesEl = document.createElement('div');
+    notesEl.className = 'event-desc';
+    notesEl.innerHTML = `
+      <span class="field-label">Notes:</span> ${notesText}
+    `;
+
+    // ====== Images ======
+    const imagesLabel = document.createElement('div');
+    imagesLabel.className = 'field-label';
+    imagesLabel.textContent = 'Images:';
+
+    const imagesWrap = document.createElement('div');
+    imagesWrap.className = 'images';
+    imagesWrap.style.display = 'flex';
+
+    if (evt.snapshot_id) {
+      loadImagesForSnapshot(evt.snapshot_id, imagesWrap);
+    } else {
+      imagesWrap.textContent = 'Không có snapshot_id.';
     }
 
-    emptyEl.style.display = "none";
+    // ====== Gắn vào card ======
+    card.appendChild(header);
+    card.appendChild(descEl);     // Description
+    card.appendChild(notesEl);    // Notes
+    card.appendChild(imagesLabel);
+    card.appendChild(imagesWrap);
 
-    events.forEach((evt) => {
-      const card = document.createElement("div");
-      card.className = "event-card";
+    eventsContainer.appendChild(card);
+  });
+}
 
-      // ====== Event ID + Time ======
-      const header = document.createElement("div");
-      header.className = "event-header";
-
-      const idEl = document.createElement("div");
-      idEl.className = "event-id";
-      idEl.textContent = `Event ID: ${evt.event_id}`;
-
-      const timeEl = document.createElement("div");
-      timeEl.className = "event-time";
-      timeEl.textContent = formatTime(evt.created_at);
-
-      header.appendChild(idEl);
-      header.appendChild(timeEl);
-
-      // ====== Description ======
-      const descEl = document.createElement("div");
-      descEl.className = "event-desc";
-      const descText = evt.notes || evt.event_description || "(Không có mô tả)";
-
-      // dùng innerHTML để có nhãn "Description:"
-      descEl.innerHTML = `<span class="field-label">Description:</span> ${descText}`;
-
-      // ====== Images ======
-      const imagesLabel = document.createElement("div");
-      imagesLabel.className = "field-label";
-      imagesLabel.textContent = "Images:";
-
-      const imagesWrap = document.createElement("div");
-      imagesWrap.className = "images";
-      imagesWrap.style.display = "flex";
-
-      if (evt.snapshot_id) {
-        loadImagesForSnapshot(evt.snapshot_id, imagesWrap);
-      } else {
-        imagesWrap.textContent = "Không có snapshot_id.";
-      }
-
-      // ====== Gắn vào card ======
-      card.appendChild(header);
-      card.appendChild(descEl);
-      card.appendChild(imagesLabel);
-      card.appendChild(imagesWrap);
-
-      eventsContainer.appendChild(card);
-    });
-  }
 
   // ========= fetch + paginate =========
   async function fetchEvents(page = 1) {

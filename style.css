@@ -229,3 +229,11 @@ h1 {
   margin-right: 4px;
   margin-top: 4px;
 }
+.field-label {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #9ca3af;
+  margin-right: 4px;
+  margin-top: 4px;
+}
