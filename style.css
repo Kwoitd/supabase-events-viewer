@@ -258,6 +258,35 @@ h1 {
   font-size: 11px;
   margin-top: 4px;
 }
+.event-status-pill {
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: rgba(15, 23, 42, 0.9);
+  color: #e5e7eb;
+  font-size: 11px;
+}
+
+.event-status-pill.status-danger {
+  border-color: rgba(248, 113, 113, 0.9);
+  background: rgba(153, 27, 27, 0.4);
+}
+
+.event-status-pill.status-warning {
+  border-color: rgba(252, 211, 77, 0.9);
+  background: rgba(146, 64, 14, 0.4);
+}
+
+.event-status-pill.status-normal {
+  border-color: rgba(34, 197, 94, 0.9);
+  background: rgba(22, 163, 74, 0.4);
+}
+
+.event-status-pill.status-unknowns,
+.event-status-pill.status-suspect {
+  border-color: rgba(129, 140, 248, 0.9);
+  background: rgba(55, 65, 81, 0.6);
+}
 
 .event-lifecycle-pill {
   padding: 2px 8px;

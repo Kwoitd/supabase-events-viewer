@@ -237,11 +237,23 @@ document.addEventListener("DOMContentLoaded", () => {
       const metaRow = document.createElement("div");
       metaRow.className = "event-meta";
 
+      // Lifecycle
       const lifecycleLabel = document.createElement("div");
       lifecycleLabel.className = "event-lifecycle-pill";
       lifecycleLabel.textContent = `Lifecycle: ${evt.lifecycle_state || "N/A"}`;
 
+      // Event status
+      const statusValue = (evt.status || "").toLowerCase(); // danger, warning, normal, ...
+      const statusLabel = evt.status || "N/A";
+
+      const statusPill = document.createElement("div");
+      statusPill.className =
+        "event-status-pill " +
+        (statusValue ? `status-${statusValue}` : "status-default");
+      statusPill.textContent = `Status: ${statusLabel}`;
+
       metaRow.appendChild(lifecycleLabel);
+      metaRow.appendChild(statusPill);
 
       // ====== Description ======
       const descriptionText = evt.event_description || "(Không có mô tả)";
