@@ -29,11 +29,11 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentPage = 1;
   let totalPages = 1;
   let totalCount = 0;
-  let currentStatusFilter = "danger_warning"; // default: danger + warning
+  let currentStatusFilter = "all"; // default
 
   if (statusFilterEl) {
     // set default value (phòng trường hợp HTML chưa set)
-    statusFilterEl.value = "danger_warning";
+    statusFilterEl.value = "all";
 
     statusFilterEl.addEventListener("change", () => {
       currentStatusFilter = statusFilterEl.value;
