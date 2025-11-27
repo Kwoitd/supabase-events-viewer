@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const emptyEl = document.getElementById("empty");
   const errorEl = document.getElementById("error");
   const paginationEl = document.getElementById("pagination");
+  const statusFilterEl = document.getElementById("status-filter");
 
   // modal xem ảnh
   const imageModal = document.getElementById("image-modal");
@@ -28,6 +29,18 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentPage = 1;
   let totalPages = 1;
   let totalCount = 0;
+  let currentStatusFilter = "danger_warning"; // default: danger + warning
+
+  if (statusFilterEl) {
+    // set default value (phòng trường hợp HTML chưa set)
+    statusFilterEl.value = "danger_warning";
+
+    statusFilterEl.addEventListener("change", () => {
+      currentStatusFilter = statusFilterEl.value;
+      // đổi filter thì nên quay về trang 1
+      fetchEvents(1);
+    });
+  }
 
   statusText.textContent = "Đang kết nối Supabase...";
 
@@ -159,80 +172,158 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
- function renderEvents(events) {
-  eventsContainer.innerHTML = '';
+  async function updateLifecycle(eventId, nextState, onDone) {
+    try {
+      statusText.textContent = "Đang cập nhật lifecycle…";
 
-  if (!events || events.length === 0) {
-    emptyEl.style.display = 'block';
-    return;
+      const { error } = await supabaseClient
+        .from(TABLE_EVENTS)
+        .update({
+          lifecycle_state: nextState,
+          last_action_at: new Date().toISOString(),
+        })
+        .eq("event_id", eventId);
+
+      if (error) {
+        console.error("Lỗi update lifecycle:", error);
+        alert("Lỗi cập nhật lifecycle: " + error.message);
+        statusText.textContent = "Lỗi cập nhật lifecycle";
+        onDone?.(false);
+        return;
+      }
+
+      statusText.textContent = "Đã cập nhật lifecycle";
+      // có realtime nên thực ra không cần, nhưng để chắc ăn:
+      fetchEvents(currentPage);
+      onDone?.(true);
+    } catch (err) {
+      console.error("Exception update lifecycle:", err);
+      alert("Có lỗi xảy ra khi cập nhật lifecycle");
+      statusText.textContent = "Lỗi cập nhật lifecycle";
+      onDone?.(false);
+    }
   }
 
-  emptyEl.style.display = 'none';
+  function renderEvents(events) {
+    eventsContainer.innerHTML = "";
 
-  events.forEach((evt) => {
-    const card = document.createElement('div');
-    card.className = 'event-card';
+    if (!events || events.length === 0) {
+      emptyEl.style.display = "block";
+      return;
+    }
 
-    // ====== Event ID + Time ======
-    const header = document.createElement('div');
-    header.className = 'event-header';
+    emptyEl.style.display = "none";
 
-    const idEl = document.createElement('div');
-    idEl.className = 'event-id';
-    idEl.textContent = `Event ID: ${evt.event_id}`;
+    events.forEach((evt) => {
+      const card = document.createElement("div");
+      card.className = "event-card";
 
-    const timeEl = document.createElement('div');
-    timeEl.className = 'event-time';
-    timeEl.textContent = formatTime(evt.created_at);
+      // ====== Header: ID + time ======
+      const header = document.createElement("div");
+      header.className = "event-header";
 
-    header.appendChild(idEl);
-    header.appendChild(timeEl);
+      const idEl = document.createElement("div");
+      idEl.className = "event-id";
+      idEl.textContent = `Event ID: ${evt.event_id}`;
 
-    // ====== Description ======
-    const descriptionText =
-      evt.event_description || '(Không có mô tả)';
+      const timeEl = document.createElement("div");
+      timeEl.className = "event-time";
+      timeEl.textContent = formatTime(evt.created_at);
 
-    const descEl = document.createElement('div');
-    descEl.className = 'event-desc';
-    descEl.innerHTML = `
+      header.appendChild(idEl);
+      header.appendChild(timeEl);
+
+      // ====== Lifecycle badge ======
+      const metaRow = document.createElement("div");
+      metaRow.className = "event-meta";
+
+      const lifecycleLabel = document.createElement("div");
+      lifecycleLabel.className = "event-lifecycle-pill";
+      lifecycleLabel.textContent = `Lifecycle: ${evt.lifecycle_state || "N/A"}`;
+
+      metaRow.appendChild(lifecycleLabel);
+
+      // ====== Description ======
+      const descriptionText = evt.event_description || "(Không có mô tả)";
+      const descEl = document.createElement("div");
+      descEl.className = "event-desc";
+      descEl.innerHTML = `
       <span class="field-label">Description:</span> ${descriptionText}
     `;
 
-    // ====== Notes ======
-    const notesText = evt.notes || '(Không có ghi chú)';
-
-    const notesEl = document.createElement('div');
-    notesEl.className = 'event-desc';
-    notesEl.innerHTML = `
+      // ====== Notes ======
+      const notesText = evt.notes || "(Không có ghi chú)";
+      const notesEl = document.createElement("div");
+      notesEl.className = "event-desc";
+      notesEl.innerHTML = `
       <span class="field-label">Notes:</span> ${notesText}
     `;
 
-    // ====== Images ======
-    const imagesLabel = document.createElement('div');
-    imagesLabel.className = 'field-label';
-    imagesLabel.textContent = 'Images:';
+      // ====== Images ======
+      const imagesLabel = document.createElement("div");
+      imagesLabel.className = "field-label";
+      imagesLabel.textContent = "Images:";
 
-    const imagesWrap = document.createElement('div');
-    imagesWrap.className = 'images';
-    imagesWrap.style.display = 'flex';
+      const imagesWrap = document.createElement("div");
+      imagesWrap.className = "images";
+      imagesWrap.style.display = "flex";
 
-    if (evt.snapshot_id) {
-      loadImagesForSnapshot(evt.snapshot_id, imagesWrap);
-    } else {
-      imagesWrap.textContent = 'Không có snapshot_id.';
-    }
+      if (evt.snapshot_id) {
+        loadImagesForSnapshot(evt.snapshot_id, imagesWrap);
+      } else {
+        imagesWrap.textContent = "Không có snapshot_id.";
+      }
 
-    // ====== Gắn vào card ======
-    card.appendChild(header);
-    card.appendChild(descEl);     // Description
-    card.appendChild(notesEl);    // Notes
-    card.appendChild(imagesLabel);
-    card.appendChild(imagesWrap);
+      // ====== Lifecycle action button ======
+      const actionsEl = document.createElement("div");
 
-    eventsContainer.appendChild(card);
-  });
-}
+      let nextState = null;
+      let buttonText = "";
 
+      if (evt.lifecycle_state === "NOTIFIED") {
+        nextState = "ALARM_ACTIVATED";
+        buttonText = "Chuyển sang ALARM_ACTIVATED";
+      } else if (evt.lifecycle_state === "ALARM_ACTIVATED") {
+        nextState = "RESOLVED";
+        buttonText = "Đánh dấu RESOLVED";
+      }
+
+      if (nextState) {
+        const btn = document.createElement("button");
+        btn.className = "lifecycle-btn";
+        btn.textContent = buttonText;
+
+        btn.addEventListener("click", () => {
+          btn.disabled = true;
+          const oldText = btn.textContent;
+          btn.textContent = "Đang cập nhật…";
+
+          updateLifecycle(evt.event_id, nextState, (ok) => {
+            if (!ok) {
+              btn.disabled = false;
+              btn.textContent = oldText;
+            }
+            // nếu OK thì realtime hoặc fetchEvents sẽ redraw card
+          });
+        });
+
+        actionsEl.appendChild(btn);
+      }
+
+      // ====== Gắn vào card ======
+      card.appendChild(header);
+      card.appendChild(metaRow);
+      card.appendChild(descEl);
+      card.appendChild(notesEl);
+      card.appendChild(imagesLabel);
+      card.appendChild(imagesWrap);
+      if (actionsEl.children.length > 0) {
+        card.appendChild(actionsEl);
+      }
+
+      eventsContainer.appendChild(card);
+    });
+  }
 
   // ========= fetch + paginate =========
   async function fetchEvents(page = 1) {
@@ -242,13 +333,30 @@ document.addEventListener("DOMContentLoaded", () => {
     const from = (page - 1) * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
 
-    const { data, error, count } = await supabaseClient
+    let query = supabaseClient
       .from(TABLE_EVENTS)
-      .select("event_id, snapshot_id, notes, event_description, created_at", {
-        count: "exact",
-      })
+      .select(
+        "event_id, snapshot_id, notes, event_description, created_at, status, lifecycle_state",
+        { count: "exact" }
+      )
       .order("created_at", { ascending: false })
       .range(from, to);
+
+    // ====== Áp dụng filter theo status ======
+    if (currentStatusFilter === "danger_warning") {
+      // mặc định: chỉ danger + warning
+      query = query.in("status", ["danger", "warning"]);
+    } else if (currentStatusFilter === "common") {
+      // danger + warning + normal
+      query = query.in("status", ["danger", "warning", "normal"]);
+    } else if (currentStatusFilter === "suspicious") {
+      // unknowns + suspect
+      query = query.in("status", ["unknowns", "suspect"]);
+    } else if (currentStatusFilter === "all") {
+      // không filter gì thêm
+    }
+
+    const { data, error, count } = await query;
 
     if (error) {
       console.error("Lỗi load events:", error);

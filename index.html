@@ -20,7 +20,19 @@
 
       <div class="status-bar">
         <div id="status-text">Đang kết nối Supabase…</div>
-        <div class="badge" id="realtime-badge">Realtime: OFF</div>
+
+        <div class="status-bar-right">
+          <span class="status-filter-label">Filter event status</span>
+
+          <select id="status-filter" class="status-filter">
+            <option value="danger_warning">Danger + Warning</option>
+            <option value="common">Danger + Warning + Normal</option>
+            <option value="suspicious">Unknowns + Suspect</option>
+            <option value="all">Tất cả trạng thái</option>
+          </select>
+
+          <div class="badge" id="realtime-badge">Realtime: OFF</div>
+        </div>
       </div>
 
       <div id="events" class="events"></div>
