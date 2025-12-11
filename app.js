@@ -286,40 +286,83 @@ document.addEventListener("DOMContentLoaded", () => {
         imagesWrap.textContent = "Không có snapshot_id.";
       }
 
-      // ====== Lifecycle action button ======
+         // ====== Lifecycle action button ======
       const actionsEl = document.createElement("div");
+      actionsEl.className = "event-actions";
 
-      let nextState = null;
-      let buttonText = "";
-
+      // Trường hợp NOTIFIED: vẫn 1 nút chuyển sang ALARM_ACTIVATED
       if (evt.lifecycle_state === "NOTIFIED") {
-        nextState = "ALARM_ACTIVATED";
-        buttonText = "Chuyển sang ALARM_ACTIVATED";
-      } else if (evt.lifecycle_state === "ALARM_ACTIVATED") {
-        nextState = "RESOLVED";
-        buttonText = "Đánh dấu RESOLVED";
-      }
+        const btnToAlarm = document.createElement("button");
+        btnToAlarm.className = "lifecycle-btn";
+        btnToAlarm.textContent = "Chuyển sang ALARM_ACTIVATED";
 
-      if (nextState) {
-        const btn = document.createElement("button");
-        btn.className = "lifecycle-btn";
-        btn.textContent = buttonText;
+        btnToAlarm.addEventListener("click", () => {
+          btnToAlarm.disabled = true;
+          const oldText = btnToAlarm.textContent;
+          btnToAlarm.textContent = "Đang cập nhật…";
 
-        btn.addEventListener("click", () => {
-          btn.disabled = true;
-          const oldText = btn.textContent;
-          btn.textContent = "Đang cập nhật…";
-
-          updateLifecycle(evt.event_id, nextState, (ok) => {
+          updateLifecycle(evt.event_id, "ALARM_ACTIVATED", (ok) => {
             if (!ok) {
-              btn.disabled = false;
-              btn.textContent = oldText;
+              btnToAlarm.disabled = false;
+              btnToAlarm.textContent = oldText;
             }
-            // nếu OK thì realtime hoặc fetchEvents sẽ redraw card
           });
         });
 
-        actionsEl.appendChild(btn);
+        actionsEl.appendChild(btnToAlarm);
+      }
+
+      // Trường hợp ALARM_ACTIVATED: có 2 nút Resolve & Autocalled
+      if (evt.lifecycle_state === "ALARM_ACTIVATED") {
+        // Nút Resolve
+        const btnResolve = document.createElement("button");
+        btnResolve.className = "lifecycle-btn";
+        btnResolve.textContent = "Resolve";
+
+        btnResolve.addEventListener("click", () => {
+          btnResolve.disabled = true;
+          const oldText = btnResolve.textContent;
+          btnResolve.textContent = "Đang cập nhật…";
+
+          updateLifecycle(evt.event_id, "RESOLVED", (ok) => {
+            if (!ok) {
+              btnResolve.disabled = false;
+              btnResolve.textContent = oldText;
+            }
+          });
+        });
+
+        // Nút Autocalled
+        const btnAutocall = document.createElement("button");
+        btnAutocall.className = "lifecycle-btn";
+        btnAutocall.textContent = "Autocalled";
+
+        btnAutocall.addEventListener("click", () => {
+          btnAutocall.disabled = true;
+          const oldText = btnAutocall.textContent;
+          btnAutocall.textContent = "Đang cập nhật…";
+
+          updateLifecycle(evt.event_id, "AUTOCALLED", (ok) => {
+            if (!ok) {
+              btnAutocall.disabled = false;
+              btnAutocall.textContent = oldText;
+            }
+          });
+        });
+
+        actionsEl.appendChild(btnResolve);
+        actionsEl.appendChild(btnAutocall);
+      }
+
+      // ====== Gắn vào card ======
+      card.appendChild(header);
+      card.appendChild(metaRow);
+      card.appendChild(descEl);
+      card.appendChild(notesEl);
+      card.appendChild(imagesLabel);
+      card.appendChild(imagesWrap);
+      if (actionsEl.children.length > 0) {
+        card.appendChild(actionsEl);
       }
 
       // ====== Gắn vào card ======
